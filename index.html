@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>中五島高 陸上部</title>
+    
+    <style>
+        :root {
+            --ios-blue: #007AFF;
+            --ios-bg: #F2F2F7;
+            --ios-card: #FFFFFF;
+            --ios-secondary: #8E8E93;
+            --ios-border: rgba(0, 0, 0, 0.1);
+            --ios-red: #FF3B30;
+        }
+
+        body {
+            margin: 0; font-family: -apple-system, "SF Pro Display", sans-serif;
+            background-color: var(--ios-bg); color: #000; -webkit-font-smoothing: antialiased;
+            -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+        }
+
+        input, select, textarea { -webkit-user-select: text; user-select: text; }
+
+        header {
+            position: sticky; top: 0; z-index: 100;
+            background: var(--ios-bg);
+            padding: 50px 20px 10px; border-bottom: 0.5px solid var(--ios-border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        header h1 { margin: 0; font-size: 34px; font-weight: 800; letter-spacing: -0.5px; }
+
+        .tab-content { display: none; padding-bottom: 220px; }
+        .tab-content.active { display: block; }
+
+        .status-container { background: var(--ios-card); margin: 16px; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+        .status-on { background: #FFEBEE; color: var(--ios-red); }
+        .status-off { background: #E5E5EA; color: var(--ios-secondary); }
+
+        .calendar-card { background: var(--ios-card); margin: 16px; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); position: relative; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+        .cal-day-label { font-size: 10px; color: var(--ios-secondary); font-weight: 600; padding-bottom: 5px; }
+        .cal-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 50%; position: relative; font-size: 14px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
+        
+        .cal-cell.has-practice { background: rgba(255, 59, 48, 0.1); border: 2px solid var(--ios-red); color: var(--ios-red); font-weight: bold; }
+        .cal-cell.today { background: var(--ios-blue) !important; color: white !important; border: none !important; }
+
+        #edit-guide { display: none; background: #FFF9C4; color: #856404; font-size: 11px; padding: 8px; text-align: center; border-radius: 8px; margin-bottom: 10px; font-weight: 600; }
+        .edit-mode-active #edit-guide { display: block; }
+        .edit-mode-active .cal-cell { border: 1px dashed #ccc; }
+
+        #chat-list { padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; }
+        .msg-row { display: flex; flex-direction: column; max-width: 85%; }
+        .msg-row.my-msg { align-self: flex-end; align-items: flex-end; }
+        .msg-row.other-msg { align-self: flex-start; align-items: flex-start; }
+        .msg-header { font-size: 11px; color: var(--ios-secondary); margin-bottom: 4px; padding: 0 4px; }
+        .msg-content-wrap { display: flex; align-items: flex-end; gap: 6px; }
+        .my-msg .msg-content-wrap { flex-direction: row-reverse; }
+        .msg-bubble { padding: 10px 16px; border-radius: 20px; font-size: 16px; background: #E9E9EB; line-height: 1.4; word-break: break-all; }
+        .my-msg .msg-bubble { background: var(--ios-blue); color: white; }
+        .msg-time { font-size: 10px; color: var(--ios-secondary); min-width: 35px; margin-bottom: 2px; }
+        .msg-icon { width: 28px; height: 28px; border-radius: 50%; background: #E5E5EA; overflow: hidden; display:flex; align-items:center; justify-content:center; flex-shrink: 0; }
+        .msg-icon img { width:100%; height:100%; object-fit:cover; }
+        .date-separator { text-align: center; margin: 20px 0 10px; }
+        .date-separator span { background: #C4C4C6; color: #fff; font-size: 11px; font-weight: 600; padding: 2px 12px; border-radius: 12px; }
+
+        .member-card { display: flex; align-items: center; padding: 16px; background: var(--ios-card); margin: 0 16px 8px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .member-info { flex: 1; }
+        .member-info h3 { margin: 0; font-size: 17px; font-weight: 600; }
+        .member-info p { margin: 0; font-size: 13px; color: var(--ios-secondary); }
+        .delete-btn { color: var(--ios-red); font-size: 13px; font-weight: 600; border: none; background: none; padding: 8px; }
+
+        .bulk-row { background: #fff; border-radius: 10px; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px; align-items: center; }
+        .bulk-row input, .bulk-row select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 12px; box-sizing: border-box; }
+
+        .bottom-unit { position: fixed; bottom: 20px; left: 16px; right: 16px; z-index: 1000; }
+        .ios-tab-bar { background: rgba(255,255,255,0.85); backdrop-filter: saturate(180%) blur(25px); border-radius: 35px; display: flex; height: 64px; box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+        .nav-btn { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #8E8E93; }
+        .nav-btn.active { color: var(--ios-blue); background: rgba(0, 122, 255, 0.08); border-radius: 35px; }
+        .input-wrapper { background: #fff; border-radius: 25px; margin-bottom: 12px; padding: 6px 14px; display: none; align-items: center; }
+        .input-wrapper input { flex: 1; border: none; outline: none; padding: 8px; font-size: 16px; }
+
+        .modal { position: fixed; inset: 0; background: var(--ios-bg); z-index: 3000; display: none; flex-direction: column; overflow-y: auto; }
+        .modal-header { position: sticky; top: 0; z-index: 10; padding: 50px 16px 10px; background: white; border-bottom: 0.5px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+
+        .signout-btn { margin: 20px 16px; padding: 15px; background: var(--ios-card); color: var(--ios-red); text-align: center; border-radius: 12px; font-weight: 600; cursor: pointer; border: 0.5px solid var(--ios-border); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+
+        #auth-screen { position: fixed; inset: 0; background: var(--ios-bg); z-index: 5000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
+        .auth-card { background: white; padding: 30px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 320px; }
+        .auth-input { width: 100%; padding: 15px; border-radius: 12px; border: 1.5px solid #eee; margin-bottom: 12px; font-size: 16px; box-sizing: border-box; outline: none; }
+        .auth-input:focus { border-color: var(--ios-blue); }
+        .auth-btn { width: 100%; padding: 16px; border-radius: 12px; background: var(--ios-blue); color: white; border: none; font-size: 17px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .auth-msg { font-size: 13px; color: var(--ios-red); margin-bottom: 15px; display: none; }
+        
+        .section-label { text-align: left; font-size: 13px; color: var(--ios-secondary); margin: 15px 0 5px 5px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div id="auth-screen">
+    <div style="font-size: 50px; margin-bottom: 10px;">🏃‍♂️</div>
+    <h1 style="margin-bottom: 30px; letter-spacing: -1px;">中高陸上部<br>部活アプリ</h1>
+    <div class="auth-card">
+        <div id="auth-msg" class="auth-msg"></div>
+        <select id="auth-grade" class="auth-input" onchange="checkAdminOption(this, 'auth-name')">
+            <option value="" disabled selected>学年を選択</option>
+            <option value="1年">1年生</option>
+            <option value="2年">2年生</option>
+            <option value="3年">3年生</option>
+            <option value="顧問">顧問</option>
+        </select>
+        <input type="text" id="auth-name" class="auth-input" placeholder="フルネーム" oninput="checkAdminOption(document.getElementById('auth-grade'), 'auth-name')">
+        <input type="password" id="auth-pass" class="auth-input" placeholder="パスワード">
+        <button class="auth-btn" id="auth-submit-btn" onclick="handleAuth()">はじめる</button>
+        <button class="auth-btn" id="auth-continue-btn" onclick="confirmLogin()" style="display:none; background:#34C759;">続ける</button>
+    </div>
+    <p style="color: var(--ios-secondary); font-size: 12px; margin-top: 20px;">初回は好きなパスワードを設定してください</p>
+</div>
+
+<div id="app-container" style="display: none;">
+    <div id="tab-home" class="tab-content active">
+        <header>
+            <h1>ホーム</h1>
+            <button id="cal-edit-toggle" onclick="toggleCalEditMode()" style="border:none; background:var(--ios-blue); color:white; border-radius:15px; padding:5px 12px; font-size:12px; font-weight:bold;">編集</button>
+        </header>
+        <div class="status-container">
+            <div id="home-date-display" style="font-size: 16px; font-weight: 700; color: var(--ios-secondary); margin-bottom: 4px;"></div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span id="home-status-badge"></span>
+                <span id="home-event-note" style="color: var(--ios-secondary); font-size: 14px;"></span>
+            </div>
+            <div id="home-event-title" style="font-size: 28px; font-weight: 800; letter-spacing: -1px; margin-top: 8px;">予定なし</div>
+        </div>
+        <div class="calendar-card" id="calendar-container">
+            <div id="edit-guide">💡 タップで赤枠切替 / 1秒長押しで詳細入力</div>
+            <div class="cal-header">
+                <button onclick="changeMonth(-1)" style="border:none; background:none; color:var(--ios-blue); font-size:20px;">〈</button>
+                <div id="cal-month-label" style="font-weight:800; font-size:18px;"></div>
+                <button onclick="changeMonth(1)" style="border:none; background:none; color:var(--ios-blue); font-size:20px;">〉</button>
+            </div>
+            <div class="cal-grid">
+                <div class="cal-day-label">日</div><div class="cal-day-label">月</div><div class="cal-day-label">火</div><div class="cal-day-label">水</div><div class="cal-day-label">木</div><div class="cal-day-label">金</div><div class="cal-day-label">土</div>
+            </div>
+            <div class="cal-grid" id="cal-grid-body"></div>
+        </div>
+    </div>
+
+    <div id="tab-members" class="tab-content">
+        <header><h1>メンバー</h1></header>
+        <div id="member-list-container" style="padding-top: 20px;"></div>
+    </div>
+
+    <div id="tab-chat" class="tab-content">
+        <header><h1>チャット</h1></header>
+        <div id="chat-list"></div>
+    </div>
+
+    <div id="tab-settings" class="tab-content">
+        <header><h1>設定</h1></header>
+        <div class="status-container" onclick="openProfileModal()" style="display:flex; align-items:center;">
+            <div id="set-icon-view" style="width:60px; height:60px; border-radius:50%; background:#eee; margin-right:15px; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:30px;"></div>
+            <div>
+                <h2 id="set-name" style="margin:0; font-size:20px;">未設定</h2>
+                <p id="set-sub" style="margin:0; color:var(--ios-secondary); font-size:14px;">タップして編集</p>
+            </div>
+        </div>
+        <div id="admin-menu-area"></div>
+        <div class="signout-btn" onclick="handleSignOut()">サインアウト</div>
+    </div>
+
+    <div class="bottom-unit">
+        <div class="input-wrapper" id="chat-input-row">
+            <input type="text" id="msg-input" placeholder="メッセージ">
+            <button id="btn-send" style="color:var(--ios-blue); font-weight:800; border:none; background:none;">送信</button>
+        </div>
+        <nav class="ios-tab-bar">
+            <button class="nav-btn active" onclick="switchTab('tab-home', this)"><span>🏠</span><span style="font-size:10px;">ホーム</span></button>
+            <button class="nav-btn" onclick="switchTab('tab-members', this)"><span>👥</span><span style="font-size:10px;">メンバー</span></button>
+            <button class="nav-btn" onclick="switchTab('tab-chat', this)"><span>💬</span><span style="font-size:10px;">チャット</span></button>
+            <button class="nav-btn" onclick="switchTab('tab-settings', this)"><span>⚙️</span><span style="font-size:10px;">設定</span></button>
+        </nav>
+    </div>
+</div>
+
+<div id="event-modal" class="modal">
+    <div class="modal-header">
+        <button onclick="closeEventModal()" style="border:none; background:none; color:var(--ios-blue); font-size:17px;">キャンセル</button>
+        <h2 style="font-size:17px; margin:0;" id="modal-date-label">予定入力</h2>
+        <button onclick="saveEvent()" style="border:none; background:none; color:var(--ios-blue); font-size:17px; font-weight:bold;">保存</button>
+    </div>
+    <div style="padding: 20px;">
+        <input type="text" id="event-title-input" placeholder="タイトル (例: 通常練習)" style="width:100%; padding:15px; border-radius:10px; border:1px solid #ddd; font-size:16px; margin-bottom:15px; box-sizing:border-box;">
+        <textarea id="event-note-input" placeholder="詳細メモ" style="width:100%; height:150px; padding:15px; border-radius:10px; border:1px solid #ddd; font-size:16px; box-sizing:border-box;"></textarea>
+    </div>
+</div>
+
+<div id="profile-modal" class="modal">
+    <div class="modal-header">
+        <button onclick="closeProfileModal()" style="border:none; background:none; color:var(--ios-blue); font-size:17px;">キャンセル</button>
+        <h2 style="font-size:17px; margin:0;">プロフィール編集</h2>
+        <button onclick="saveProfile()" style="border:none; background:none; color:var(--ios-blue); font-size:17px; font-weight:bold;">保存</button>
+    </div>
+    <div style="padding: 0 20px 40px; text-align:center;">
+        <div id="profile-icon-preview" style="width:100px; height:100px; border-radius:50%; background:#eee; margin:20px auto; overflow:hidden; border:1px solid #ddd; display:flex; align-items:center; justify-content:center; font-size:40px; position:relative;">
+            <span id="profile-icon-inner">🏃</span>
+            <input type="file" id="icon-file-input" style="position:absolute; inset:0; opacity:0;">
+        </div>
+        
+        <div class="section-label">基本情報</div>
+        <input type="text" id="profile-name-input" placeholder="名前" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; margin-bottom:10px; box-sizing:border-box; font-size:16px;" oninput="checkAdminOption(document.getElementById('profile-grade-input'), 'profile-name-input')">
+        
+        <select id="profile-grade-input" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; margin-bottom:10px; font-size:16px;" onchange="checkAdminOption(this, 'profile-name-input')">
+            <option value="1年">1年生</option>
+            <option value="2年">2年生</option>
+            <option value="3年">3年生</option>
+            <option value="顧問">顧問</option>
+        </select>
+        
+        <select id="profile-role-input" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; font-size:16px; margin-bottom:10px;">
+            <option value="生徒">生徒</option>
+            <option value="顧問">顧問</option>
+        </select>
+
+        <div class="section-label">セキュリティ</div>
+        <input type="text" id="profile-pass-input" placeholder="新しいパスワード" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; box-sizing:border-box; font-size:16px;">
+        <p style="color:var(--ios-secondary); font-size:12px; margin-top:10px;">※パスワードを忘れないようご注意ください。</p>
+    </div>
+</div>
+
+<div id="admin-bulk-modal" class="modal">
+    <div class="modal-header">
+        <button onclick="closeAdminModal()" style="border:none; background:none; color:var(--ios-blue); font-size:17px;">閉じる</button>
+        <h2 style="font-size:17px; margin:0;">メンバー管理</h2>
+        <button onclick="executeBulkCreate()" style="border:none; background:none; color:var(--ios-blue); font-size:17px; font-weight:bold;">保存</button>
+    </div>
+    <div style="padding: 20px;">
+        <div id="bulk-list"></div>
+        <button onclick="addBulkRow()" style="width:100%; padding:15px; border-radius:10px; border:2px dashed var(--ios-blue); background:none; color:var(--ios-blue); font-weight:bold; margin-top:10px;">＋ 登録枠を追加</button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, onSnapshot, setDoc, collection, addDoc, query, orderBy, serverTimestamp, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = { 
+        apiKey: "AIzaSyDPu-dD6f14EqFTz9W9p26Z8mWi4htZmV4", 
+        authDomain: "nakagoto-high-rikujo.firebaseapp.com", 
+        projectId: "nakagoto-high-rikujo", 
+        storageBucket: "nakagoto-high-rikujo.firebasestorage.app", 
+        messagingSenderId: "1022629078697", 
+        appId: "1:1022629078697:web:b67742e6d8e547e84d6bb8" 
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let currentViewDate = new Date();
+    let eventsData = {};
+    let isEditMode = false;
+    let selectedDateId = null;
+    let pressTimer = null;
+    let isLongPress = false;
+    let tempUserData = null;
+
+    window.checkAdminOption = (selectEl, nameInputId) => {
+        const name = document.getElementById(nameInputId).value.trim();
+        const roleSelect = (nameInputId === 'auth-name') ? selectEl : document.getElementById('profile-role-input');
+        const hasAdmin = Array.from(selectEl.options).some(o => o.value === "管理用");
+        
+        if (name === "松田悠斗") {
+            if (!hasAdmin) {
+                const opt = document.createElement('option');
+                opt.value = "管理用"; opt.innerText = "管理用";
+                selectEl.appendChild(opt);
+                if (nameInputId === 'profile-name-input') {
+                    const rHasAdmin = Array.from(roleSelect.options).some(o => o.value === "管理用");
+                    if(!rHasAdmin){
+                        const rOpt = document.createElement('option');
+                        rOpt.value = "管理用"; rOpt.innerText = "管理用";
+                        roleSelect.appendChild(rOpt);
+                    }
+                }
+            }
+        } else {
+            for (let i = 0; i < selectEl.options.length; i++) {
+                if (selectEl.options[i].value === "管理用") selectEl.remove(i);
+            }
+            if (nameInputId === 'profile-name-input') {
+                for (let i = 0; i < roleSelect.options.length; i++) {
+                    if (roleSelect.options[i].value === "管理用") roleSelect.remove(i);
+                }
+            }
+        }
+    };
+
+    window.handleAuth = async () => {
+        const grade = document.getElementById('auth-grade').value;
+        const name = document.getElementById('auth-name').value.trim();
+        const pass = document.getElementById('auth-pass').value.trim();
+        const msg = document.getElementById('auth-msg');
+
+        if (!grade || !name || !pass) { alert("全て入力してください"); return; }
+
+        const userRef = doc(db, "users", name);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
+            const data = userSnap.data();
+            if (data.grade === grade && data.password === pass) {
+                tempUserData = data;
+                msg.style.display = "block";
+                msg.innerText = "こちらのアカウントは既に作成されています。";
+                document.getElementById('auth-submit-btn').style.display = "none";
+                document.getElementById('auth-continue-btn').style.display = "block";
+            } else {
+                alert("登録情報と一致しません。パスワードや学年を確認してください。");
+            }
+        } else {
+            const newUser = {
+                name: name, grade: grade, password: pass,
+                role: (grade === "顧問" || grade === "管理用") ? grade : "生徒",
+                icon: "🏃"
+            };
+            await setDoc(userRef, newUser);
+            saveLocalAndStart(newUser);
+        }
+    };
+
+    window.confirmLogin = () => { if (tempUserData) saveLocalAndStart(tempUserData); };
+
+    const saveLocalAndStart = (user) => {
+        localStorage.setItem('rikujo_name', user.name);
+        localStorage.setItem('rikujo_grade', user.grade);
+        localStorage.setItem('rikujo_role', user.role);
+        localStorage.setItem('rikujo_pass', user.password);
+        localStorage.setItem('rikujo_icon', user.icon || "🏃");
+        location.reload();
+    };
+
+    window.handleSignOut = () => {
+        if(confirm("サインアウトしますか？\n（この端末からデータが消去されます）")) {
+            localStorage.clear();
+            location.reload();
+        }
+    };
+
+    const renderCalendar = () => {
+        const grid = document.getElementById('cal-grid-body');
+        grid.innerHTML = "";
+        const year = currentViewDate.getFullYear();
+        const month = currentViewDate.getMonth();
+        document.getElementById('cal-month-label').innerText = `${year}年 ${month + 1}月`;
+        
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
+        
+        for(let i=0; i<firstDay; i++) grid.innerHTML += `<div></div>`;
+        for(let d=1; d<=lastDate; d++){
+            const dateId = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const isToday = new Date().toISOString().split('T')[0] === dateId;
+            const event = eventsData[dateId];
+            const cell = document.createElement('div');
+            cell.className = `cal-cell ${isToday ? 'today' : ''} ${event?.hasPractice ? 'has-practice' : ''}`;
+            cell.innerText = d;
+            
+            const startPress = () => {
+                isLongPress = false;
+                if(!isEditMode) return;
+                pressTimer = setTimeout(() => { isLongPress = true; openEventModal(dateId); }, 1000);
+            };
+            const endPress = () => clearTimeout(pressTimer);
+            cell.onmousedown = startPress; cell.onmouseup = endPress;
+            cell.ontouchstart = startPress; cell.ontouchend = endPress;
+            cell.onclick = async () => {
+                if(isEditMode && !isLongPress) {
+                    await setDoc(doc(db, "calendar", dateId), { hasPractice: !event?.hasPractice }, { merge: true });
+                }
+            };
+            grid.appendChild(cell);
+        }
+        updateHomeDisplay();
+    };
+
+    window.toggleCalEditMode = () => {
+        isEditMode = !isEditMode;
+        const btn = document.getElementById('cal-edit-toggle');
+        btn.innerText = isEditMode ? "完了" : "編集";
+        btn.style.background = isEditMode ? "var(--ios-red)" : "var(--ios-blue)";
+        document.getElementById('calendar-container').classList.toggle('edit-mode-active', isEditMode);
+    };
+
+    window.changeMonth = (diff) => { currentViewDate.setMonth(currentViewDate.getMonth() + diff); renderCalendar(); };
+    window.openEventModal = (dateId) => {
+        selectedDateId = dateId;
+        const event = eventsData[dateId];
+        document.getElementById('modal-date-label').innerText = dateId;
+        document.getElementById('event-title-input').value = event?.title || "";
+        document.getElementById('event-note-input').value = event?.note || "";
+        document.getElementById('event-modal').style.display = 'flex';
+    };
+    window.closeEventModal = () => { document.getElementById('event-modal').style.display = 'none'; isLongPress = false; };
+    window.saveEvent = async () => {
+        const t = document.getElementById('event-title-input').value;
+        const n = document.getElementById('event-note-input').value;
+        await setDoc(doc(db, "calendar", selectedDateId), { title: t, note: n }, { merge: true });
+        closeEventModal();
+    };
+
+    const updateHomeDisplay = () => {
+        const today = new Date().toISOString().split('T')[0];
+        const event = eventsData[today];
+        document.getElementById('home-date-display').innerText = new Date().toLocaleDateString('ja-JP', {month:'long', day:'numeric', weekday:'short'});
+        const badge = document.getElementById('home-status-badge');
+        const note = document.getElementById('home-event-note');
+        const title = document.getElementById('home-event-title');
+        if(event?.hasPractice) {
+            badge.className = "status-badge status-on"; badge.innerText = "部活あり";
+            note.innerText = event.note || "";
+            title.innerText = event.title && event.title.trim() !== "" ? event.title : "本日の予定なし";
+        } else {
+            badge.className = "status-badge status-off"; badge.innerText = "部活なし/未定";
+            note.innerText = "ゆっくり休みましょう";
+            title.innerText = event?.title && event.title.trim() !== "" ? event.title : "本日の予定なし";
+        }
+    };
+
+    onSnapshot(collection(db, "calendar"), (snap) => {
+        eventsData = {}; snap.forEach(doc => eventsData[doc.id] = doc.data()); renderCalendar();
+    });
+
+    onSnapshot(collection(db, "users"), (snap) => {
+        const container = document.getElementById('member-list-container');
+        container.innerHTML = "";
+        const myName = localStorage.getItem('rikujo_name');
+        const myRole = localStorage.getItem('rikujo_role');
+        snap.forEach(docSnap => {
+            const u = docSnap.data();
+            const icon = (u.icon && u.icon.startsWith('data:')) ? `<img src="${u.icon}" style="width:100%;height:100%;object-fit:cover;">` : (u.icon || '🏃');
+            const delBtn = (myName === "松田悠斗" && myRole === "管理用") ? `<button class="delete-btn" onclick="deleteUser('${u.name}')">削除</button>` : "";
+            container.innerHTML += `<div class="member-card"><div style="width:40px;height:40px;border-radius:50%;background:#eee;margin-right:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:20px;">${icon}</div><div class="member-info"><h3>${u.name}</h3><p>${u.grade} / ${u.role}</p></div>${delBtn}</div>`;
+        });
+    });
+
+    window.deleteUser = async (name) => { if(confirm(name + " を削除しますか？")) await deleteDoc(doc(db, "users", name)); };
+
+    window.addBulkRow = () => {
+        const list = document.getElementById('bulk-list');
+        const row = document.createElement('div');
+        row.className = 'bulk-row';
+        row.innerHTML = `<input type="text" class="b-name" placeholder="名前"><select class="b-grade"><option value="1年">1年</option><option value="2年">2年</option><option value="3年">3年</option></select><input type="text" class="b-pass" placeholder="パスワード"><button onclick="this.parentElement.remove()" style="border:none;background:none;color:var(--ios-red);">✕</button>`;
+        list.appendChild(row);
+    };
+
+    window.openAdminModal = () => { document.getElementById('bulk-list').innerHTML = ""; addBulkRow(); document.getElementById('admin-bulk-modal').style.display = 'flex'; };
+    window.closeAdminModal = () => document.getElementById('admin-bulk-modal').style.display = 'none';
+
+    window.executeBulkCreate = async () => {
+        const rows = document.querySelectorAll('.bulk-row');
+        let count = 0;
+        for(let row of rows) {
+            const name = row.querySelector('.b-name').value.trim();
+            const grade = row.querySelector('.b-grade').value;
+            const pass = row.querySelector('.b-pass').value.trim();
+            if(name && pass) { await setDoc(doc(db, "users", name), { name, grade, password: pass, role: "生徒", icon: "🏃" }); count++; }
+        }
+        if(count > 0) alert(count + "名の登録/更新が完了しました");
+        closeAdminModal();
+    };
+
+    const chatQuery = query(collection(db, "chats"), orderBy("createdAt", "asc"));
+    onSnapshot(chatQuery, (snap) => {
+        const list = document.getElementById('chat-list');
+        list.innerHTML = "";
+        let lastDateStr = "";
+        snap.forEach(doc => {
+            const m = doc.data();
+            const date = m.createdAt?.toDate();
+            const dateStr = date?.toLocaleDateString('ja-JP', {month:'short', day:'numeric', weekday:'short'});
+            if(dateStr && dateStr !== lastDateStr) { list.innerHTML += `<div class="date-separator"><span>${dateStr}</span></div>`; lastDateStr = dateStr; }
+            const isMe = m.sender === localStorage.getItem('rikujo_name');
+            const timeStr = date?.toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit'}) || "";
+            const icon = (m.icon && m.icon.startsWith('data:')) ? `<img src="${m.icon}">` : (m.icon || '🏃');
+            list.innerHTML += `<div class="msg-row ${isMe ? 'my-msg' : 'other-msg'}"><div class="msg-header">${m.grade || ''} ${m.sender}</div><div class="msg-content-wrap"><div class="msg-icon">${icon}</div><div class="msg-bubble">${m.text}</div><div class="msg-time">${timeStr}</div></div></div>`;
+        });
+        list.scrollTop = list.scrollHeight;
+    });
+
+    document.getElementById('btn-send').onclick = async () => {
+        const val = document.getElementById('msg-input').value;
+        if(!val.trim()) return;
+        await addDoc(collection(db, "chats"), {
+            text: val, sender: localStorage.getItem('rikujo_name'), grade: localStorage.getItem('rikujo_grade'),
+            icon: localStorage.getItem('rikujo_icon'), createdAt: serverTimestamp()
+        });
+        document.getElementById('msg-input').value = "";
+    };
+
+    window.switchTab = (id, btn) => {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        btn.classList.add('active');
+        document.getElementById('chat-input-row').style.display = (id === 'tab-chat') ? 'flex' : 'none';
+    };
+
+    window.openProfileModal = () => {
+        document.getElementById('profile-name-input').value = localStorage.getItem('rikujo_name') || "";
+        document.getElementById('profile-grade-input').value = localStorage.getItem('rikujo_grade') || "1年";
+        document.getElementById('profile-role-input').value = localStorage.getItem('rikujo_role') || "生徒";
+        document.getElementById('profile-pass-input').value = localStorage.getItem('rikujo_pass') || "";
+        const icon = localStorage.getItem('rikujo_icon') || "🏃";
+        document.getElementById('profile-icon-inner').innerHTML = icon.startsWith('data:') ? `<img src="${icon}" style="width:100%;height:100%;object-fit:cover;">` : icon;
+        checkAdminOption(document.getElementById('profile-grade-input'), 'profile-name-input');
+        document.getElementById('profile-modal').style.display = 'flex';
+    };
+    
+    window.closeProfileModal = () => document.getElementById('profile-modal').style.display = 'none';
+    
+    window.saveProfile = async () => {
+        const name = document.getElementById('profile-name-input').value.trim();
+        const grade = document.getElementById('profile-grade-input').value;
+        const role = document.getElementById('profile-role-input').value;
+        const pass = document.getElementById('profile-pass-input').value.trim();
+        const icon = window.tempIcon || localStorage.getItem('rikujo_icon') || "🏃";
+
+        if (!name || !pass) return alert("名前とパスワードを入力してください");
+
+        localStorage.setItem('rikujo_name', name);
+        localStorage.setItem('rikujo_grade', grade);
+        localStorage.setItem('rikujo_role', role);
+        localStorage.setItem('rikujo_pass', pass);
+        localStorage.setItem('rikujo_icon', icon);
+
+        await setDoc(doc(db, "users", name), { name, grade, role, icon, password: pass }, {merge: true});
+        location.reload();
+    };
+
+    document.getElementById('icon-file-input').onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = (f) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 100; canvas.height = 100;
+                canvas.getContext('2d').drawImage(img, 0, 0, 100, 100);
+                window.tempIcon = canvas.toDataURL('image/jpeg', 0.8);
+                document.getElementById('profile-icon-inner').innerHTML = `<img src="${window.tempIcon}" style="width:100%;height:100%;object-fit:cover;">`;
+            };
+            img.src = f.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    };
+
+    window.onload = () => {
+        const savedName = localStorage.getItem('rikujo_name');
+        if(!savedName) {
+            document.getElementById('auth-screen').style.display = 'flex';
+            document.getElementById('app-container').style.display = 'none';
+        } else {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
+            const grade = localStorage.getItem('rikujo_grade');
+            const role = localStorage.getItem('rikujo_role');
+            const icon = localStorage.getItem('rikujo_icon') || '🏃';
+            document.getElementById('set-name').innerText = savedName;
+            document.getElementById('set-sub').innerText = `${grade} / ${role}`;
+            document.getElementById('set-icon-view').innerHTML = icon.startsWith('data:') ? `<img src="${icon}" style="width:100%;height:100%;object-fit:cover;">` : icon;
+            if (savedName === "松田悠斗" && role === "管理用") {
+                document.getElementById('admin-menu-area').innerHTML = `<div class="status-container" onclick="openAdminModal()" style="margin-top:0; color:var(--ios-blue); font-weight:bold; display:flex; justify-content:space-between; align-items:center;"><span>🛠 メンバー管理・一括登録</span><span>〉</span></div>`;
+            }
+        }
+    };
+</script>
+</body>
+</html>
