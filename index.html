@@ -3,10 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <link rel="icon" href="/favicon.ico">
+    <!-- 通常のfavicon (ブラウザのタブ用) -->
+    <link rel="icon" href="nakagoto.png">
+    
+    <!-- iPhone/iPadのホーム画面用アイコン (重要！) -->
+    <link rel="apple-touch-icon" href="nakagoto.png">
+    
+    <!-- Android/Chrome用 (任意ですが推奨) -->
+    <link rel="icon" type="image/png" sizes="192x192" href="nakagoto.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>中五島高 陸上部</title>
+    <title>中五島高校 陸上部</title>
     
     <style>
         :root {
@@ -91,7 +98,22 @@
 
         .signout-btn { margin: 20px 16px; padding: 15px; background: var(--ios-card); color: var(--ios-red); text-align: center; border-radius: 12px; font-weight: 600; cursor: pointer; border: 0.5px solid var(--ios-border); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
 
-        #auth-screen { position: fixed; inset: 0; background: var(--ios-bg); z-index: 5000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
+        #auth-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--ios-bg);
+    z-index: 5000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* justify-content: center; ← これを削除（中身が多いと上下が切れるため） */
+    padding: 40px 20px; /* 左右の余白を少し調整 */
+    text-align: center;
+    
+    /* 追加：スクロールできるようにする設定 */
+    overflow-y: auto; 
+    -webkit-overflow-scrolling: touch; /* iPhoneでスルスル動くように */
+}
         .auth-card { background: white; padding: 30px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 320px; }
         .auth-input { width: 100%; padding: 15px; border-radius: 12px; border: 1.5px solid #eee; margin-bottom: 12px; font-size: 16px; box-sizing: border-box; outline: none; }
         .auth-input:focus { border-color: var(--ios-blue); }
@@ -104,7 +126,9 @@
 <body>
 
 <div id="auth-screen">
-    <div style="font-size: 50px; margin-bottom: 10px;">🏃‍♂️</div>
+    <div style="margin-bottom: 10px;">
+  <img src="nakagoto.png" alt="中高のアプリアイコン" style="width: 130px; height: auto;">
+    </div>
     <h1 style="margin-bottom: 30px; letter-spacing: -1px;">中高陸上部<br>部活アプリ</h1>
     <div class="auth-card">
         <div id="auth-msg" class="auth-msg"></div>
